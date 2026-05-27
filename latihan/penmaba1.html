@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latihan Soal Penmaba UNJ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .correct-answer {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+        .wrong-answer {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b !important;
+        }
+        .disabled-option {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col">
+
+    <header class="bg-green-700 text-white p-4 shadow-md flex-none">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold">Simulasi Penmaba UNJ</h1>
+            <div id="score-display" class="hidden text-sm bg-green-800 px-3 py-1 rounded-full">
+                Skor: <span id="current-score" class="font-bold">0</span> / <span id="total-answered">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 flex-grow flex flex-col items-center justify-center relative max-w-4xl">
+        
+        <!-- Layar Pemilihan Kategori -->
+        <div id="menu-screen" class="w-full bg-white rounded-xl shadow-lg p-6 md:p-10 text-center transition-all duration-300">
+            <h2 class="text-2xl font-bold mb-2">Selamat Datang di Latihan Soal</h2>
+            <p class="text-gray-600 mb-8">Pilih kategori tes yang ingin Anda kerjakan. Setiap kategori berisi 25 soal latihan.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="btn-skolastik" onclick="startTest('skolastik')" class="category-btn p-6 border-2 border-green-500 rounded-lg hover:bg-green-50 transition-colors flex flex-col items-center group">
+                    <span class="text-3xl mb-2">🧠</span>
+                    <h3 class="font-bold text-lg group-hover:text-green-700">Tes Penalaran Skolastik</h3>
+                    <p id="desc-skolastik" class="text-sm text-gray-500">25 Soal</p>
+                </button>
+                <button id="btn-matematika" onclick="startTest('matematika')" class="category-btn p-6 border-2 border-blue-500 rounded-lg hover:bg-blue-50 transition-colors flex flex-col items-center group">
+                    <span class="text-3xl mb-2">➗</span>
+                    <h3 class="font-bold text-lg group-hover:text-blue-700">Penalaran Matematika</h3>
+                    <p id="desc-matematika" class="text-sm text-gray-500">25 Soal</p>
+                </button>
+                <button id="btn-bahasa_indonesia" onclick="startTest('bahasa_indonesia')" class="category-btn p-6 border-2 border-red-500 rounded-lg hover:bg-red-50 transition-colors flex flex-col items-center group">
+                    <span class="text-3xl mb-2">📖</span>
+                    <h3 class="font-bold text-lg group-hover:text-red-700">Literasi Bahasa Indonesia</h3>
+                    <p id="desc-bahasa_indonesia" class="text-sm text-gray-500">25 Soal</p>
+                </button>
+                <button id="btn-bahasa_inggris" onclick="startTest('bahasa_inggris')" class="category-btn p-6 border-2 border-purple-500 rounded-lg hover:bg-purple-50 transition-colors flex flex-col items-center group">
+                    <span class="text-3xl mb-2">🔤</span>
+                    <h3 class="font-bold text-lg group-hover:text-purple-700">Literasi Bahasa Inggris</h3>
+                    <p id="desc-bahasa_inggris" class="text-sm text-gray-500">25 Soal</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Layar Pengerjaan Soal -->
+        <div id="quiz-screen" class="hidden w-full bg-white rounded-xl shadow-lg p-6 md:p-8 flex flex-col transition-all duration-300">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <button onclick="backToMenu()" class="text-gray-500 hover:text-gray-800 flex items-center text-sm font-medium">
+                    ← Kembali ke Menu
+                </button>
+                <div class="text-sm font-semibold px-3 py-1 bg-gray-100 rounded-full" id="question-counter">
+                    Soal 1 / 25
+                </div>
+            </div>
+
+            <div id="question-container" class="mb-6">
+                <!-- Teks bacaan jika ada -->
+                <div id="passage-text" class="hidden mb-6 p-4 bg-gray-50 rounded-lg border text-gray-700 text-sm md:text-base leading-relaxed text-justify">
+                </div>
+                
+                <h3 id="question-text" class="text-lg md:text-xl font-semibold mb-6">Pertanyaan akan muncul di sini...</h3>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Opsi jawaban akan di-generate di sini -->
+                </div>
+            </div>
+
+            <!-- Area Pembahasan (Awalnya disembunyikan) -->
+            <div id="explanation-container" class="hidden mb-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 class="font-bold text-blue-800 mb-2 flex items-center">
+                    <span class="mr-2">💡</span> Pembahasan
+                </h4>
+                <p id="explanation-text" class="text-gray-700 text-sm md:text-base"></p>
+            </div>
+
+            <div class="mt-auto flex justify-end pt-4 border-t">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-sm">
+                    Soal Selanjutnya
+                </button>
+                <button id="finish-btn" onclick="finishTest()" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-sm">
+                    Selesai
+                </button>
+            </div>
+        </div>
+
+        <!-- Layar Hasil Akhir -->
+        <div id="result-screen" class="hidden w-full max-w-lg bg-white rounded-xl shadow-lg p-8 text-center transition-all duration-300">
+            <h2 class="text-3xl font-bold mb-2">Tes Selesai!</h2>
+            <p id="result-category" class="text-gray-500 mb-6 font-medium"></p>
+            
+            <div class="flex justify-center items-center mb-8">
+                <div class="relative w-32 h-32 rounded-full border-8 border-gray-100 flex items-center justify-center">
+                    <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path id="score-circle"
+                            class="text-green-500 stroke-current"
+                            stroke-width="3"
+                            stroke-dasharray="100, 100"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                    </svg>
+                    <div class="text-3xl font-bold text-gray-800" id="final-score">0%</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <div class="text-green-600 text-sm font-semibold">Benar</div>
+                    <div id="correct-count" class="text-2xl font-bold text-green-700">0</div>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                    <div class="text-red-600 text-sm font-semibold">Salah</div>
+                    <div id="wrong-count" class="text-2xl font-bold text-red-700">0</div>
+                </div>
+            </div>
+
+            <button onclick="backToMenu()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                Kembali ke Menu Utama
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // Data Soal
+        const questionsData = {
+            skolastik: [
+                {
+                    q: "Semua mahasiswa baru harus mengikuti orientasi. Sebagian mahasiswa baru memakai kemeja putih. Kesimpulan yang tepat adalah...",
+                    options: [
+                        "A. Semua mahasiswa yang mengikuti orientasi memakai kemeja putih.",
+                        "B. Sebagian mahasiswa baru yang tidak memakai kemeja putih tidak mengikuti orientasi.",
+                        "C. Sebagian mahasiswa baru yang mengikuti orientasi memakai kemeja putih.",
+                        "D. Semua mahasiswa baru yang memakai kemeja putih tidak mengikuti orientasi.",
+                        "E. Tidak ada mahasiswa baru yang memakai kemeja putih."
+                    ],
+                    answer: 2,
+                    explanation: "Berdasarkan premis 'Semua mahasiswa baru mengikuti orientasi' dan 'Sebagian mahasiswa baru memakai kemeja putih', maka irisan dari kedua himpunan tersebut adalah sebagian mahasiswa baru yang mengikuti orientasi dan mereka memakai kemeja putih. Jawaban C paling tepat."
+                },
+                {
+                    q: "Jika hari ini hujan, maka Budi membawa payung. Budi tidak membawa payung. Maka kesimpulannya adalah...",
+                    options: [
+                        "A. Hari ini hujan.",
+                        "B. Hari ini tidak hujan.",
+                        "C. Budi lupa membawa payung.",
+                        "D. Payung Budi rusak.",
+                        "E. Budi tidak suka hujan."
+                    ],
+                    answer: 1,
+                    explanation: "Ini adalah bentuk modus tollens logika matematika. Premis 1: p -> q (Hujan -> Bawa payung). Premis 2: ~q (Tidak bawa payung). Kesimpulan: ~p (Tidak hujan)."
+                },
+                {
+                    q: "SINONIM dari kata 'EVOKASI' adalah...",
+                    options: [
+                        "A. Penilaian",
+                        "B. Penggugah rasa",
+                        "C. Provokasi",
+                        "D. Izin menetap",
+                        "E. Pengungsian"
+                    ],
+                    answer: 1,
+                    explanation: "Menurut KBBI, evokasi berarti daya penggugah rasa; kemampuan membangkitkan kenangan, ingatan, dsb."
+                },
+                {
+                    q: "ANTONIM dari kata 'APRIORI' adalah...",
+                    options: [
+                        "A. Posteriori",
+                        "B. Prioritas",
+                        "C. Unggulan",
+                        "D. Terakhir",
+                        "E. Proporsi"
+                    ],
+                    answer: 0,
+                    explanation: "Apriori berarti pengetahuan yang ada sebelum pengalaman/pengamatan. Antonimnya adalah Posteriori yang berarti pengetahuan yang didapat dari pengalaman/setelah kejadian."
+                },
+                {
+                    q: "Buku : Perpustakaan = Uang : ...",
+                    options: [
+                        "A. Dompet",
+                        "B. Bank",
+                        "C. Brankas",
+                        "D. Kasir",
+                        "E. Ekonomi"
+                    ],
+                    answer: 1,
+                    explanation: "Analogi tempat penyimpanan institusional. Buku disimpan secara terorganisir di Perpustakaan. Uang disimpan secara terorganisir di Bank. (Dompet dan brankas lebih ke tempat penyimpanan pribadi)."
+                },
+                {
+                    q: "Deret angka: 2, 5, 10, 17, 26, ... Angka selanjutnya adalah?",
+                    options: [
+                        "A. 35",
+                        "B. 37",
+                        "C. 39",
+                        "D. 41",
+                        "E. 43"
+                    ],
+                    answer: 1,
+                    explanation: "Pola selisih: +3, +5, +7, +9. Selisih selanjutnya adalah +11. Jadi, 26 + 11 = 37."
+                },
+                {
+                    q: "Huruf selanjutnya dari deret: A, C, F, J, O, ...",
+                    options: [
+                        "A. S",
+                        "B. T",
+                        "C. U",
+                        "D. V",
+                        "E. W"
+                    ],
+                    answer: 2,
+                    explanation: "Jarak antar huruf: A ke C (+2), C ke F (+3), F ke J (+4), J ke O (+5). Maka O + 6 = U."
+                },
+                {
+                    q: "Sebuah proyek diselesaikan oleh 8 orang dalam 15 hari. Jika proyek ingin diselesaikan dalam 10 hari, berapa banyak tambahan pekerja yang dibutuhkan?",
+                    options: [
+                        "A. 4 orang",
+                        "B. 6 orang",
+                        "C. 12 orang",
+                        "D. 10 orang",
+                        "E. 2 orang"
+                    ],
+                    answer: 0,
+                    explanation: "Ini adalah perbandingan berbalik nilai. (8 orang * 15 hari) = (X orang * 10 hari). 120 = 10X -> X = 12 orang. Total pekerja butuh 12 orang. Karena sudah ada 8 orang, tambahan yang dibutuhkan adalah 12 - 8 = 4 orang."
+                },
+                {
+                    q: "Tidak ada pemalas yang sukses. Semua yang sukses rajin bekerja. Sebagian karyawan adalah pemalas. Kesimpulan...",
+                    options: [
+                        "A. Sebagian karyawan sukses.",
+                        "B. Sebagian karyawan tidak sukses.",
+                        "C. Semua karyawan tidak sukses.",
+                        "D. Semua pemalas rajin bekerja.",
+                        "E. Sebagian pemalas rajin bekerja."
+                    ],
+                    answer: 1,
+                    explanation: "Karena sebagian karyawan adalah pemalas, dan tidak ada pemalas yang sukses, maka sebagian karyawan (yang pemalas itu) pasti tidak sukses."
+                },
+                {
+                    q: "Pilihlah kata yang TIDAK termasuk dalam kelompoknya!",
+                    options: [
+                        "A. Paus",
+                        "B. Hiu",
+                        "C. Lumba-lumba",
+                        "D. Pesut",
+                        "E. Anjing laut"
+                    ],
+                    answer: 1,
+                    explanation: "Paus, lumba-lumba, pesut, dan anjing laut adalah mamalia laut (berkembang biak dengan melahirkan dan bernapas dengan paru-paru). Sedangkan hiu adalah kelompok ikan (pisces)."
+                },
+                {
+                    q: "12, 13, 15, 18, 22, X, Y. Nilai X dan Y adalah...",
+                    options: [
+                        "A. 27, 33",
+                        "B. 27, 34",
+                        "C. 28, 34",
+                        "D. 28, 35",
+                        "E. 29, 36"
+                    ],
+                    answer: 0,
+                    explanation: "Polanya adalah penambahan selisih yang bertambah 1: +1, +2, +3, +4. Selanjutnya +5 (22+5 = 27 = X), lalu +6 (27+6 = 33 = Y)."
+                },
+                {
+                    q: "Lampu A menyala setiap 12 menit, lampu B setiap 15 menit, dan lampu C setiap 20 menit. Jika ketiganya menyala bersamaan pada pukul 08.00, pukul berapa mereka menyala bersamaan lagi?",
+                    options: [
+                        "A. 08.45",
+                        "B. 09.00",
+                        "C. 09.15",
+                        "D. 09.30",
+                        "E. 10.00"
+                    ],
+                    answer: 1,
+                    explanation: "Cari KPK dari 12, 15, dan 20. KPK-nya adalah 60. Artinya mereka menyala bersamaan lagi setelah 60 menit (1 jam). 08.00 + 1 jam = 09.00."
+                },
+                {
+                    q: "Analogi: GURU : SEKOLAH = ... : ...",
+                    options: [
+                        "A. Dokter : Pasien",
+                        "B. Petani : Sawah",
+                        "C. Hakim : Pengacara",
+                        "D. Polisi : Lalu lintas",
+                        "E. Koki : Makanan"
+                    ],
+                    answer: 1,
+                    explanation: "Hubungan profesi dan tempat kerja utamanya. Guru bekerja di sekolah, Petani bekerja di sawah."
+                },
+                {
+                    q: "Antonim dari 'PROMINEN' adalah...",
+                    options: [
+                        "A. Terkenal",
+                        "B. Biasa",
+                        "C. Elit",
+                        "D. Menonjol",
+                        "E. Penting"
+                    ],
+                    answer: 1,
+                    explanation: "Prominen artinya terkemuka, menonjol, terkenal. Antonim yang tepat adalah 'Biasa' atau tidak menonjol."
+                },
+                {
+                    q: "Sebuah kubus memiliki volume 343 cm³. Berapa luas permukaannya?",
+                    options: [
+                        "A. 294 cm²",
+                        "B. 196 cm²",
+                        "C. 216 cm²",
+                        "D. 343 cm²",
+                        "E. 147 cm²"
+                    ],
+                    answer: 0,
+                    explanation: "Volume = s³. s = akar pangkat 3 dari 343 = 7 cm. Luas permukaan kubus = 6 * s² = 6 * 7² = 6 * 49 = 294 cm²."
+                },
+                {
+                    q: "Umur ayah 4 kali umur anak. Lima tahun yang lalu, umur ayah 7 kali umur anak. Berapa umur anak sekarang?",
+                    options: [
+                        "A. 8 tahun",
+                        "B. 10 tahun",
+                        "C. 12 tahun",
+                        "D. 15 tahun",
+                        "E. 20 tahun"
+                    ],
+                    answer: 1,
+                    explanation: "Misal ayah = A, anak = B. (1) A = 4B. (2) (A-5) = 7(B-5) -> A - 5 = 7B - 35. Substitusi A: 4B - 5 = 7B - 35 -> 30 = 3B -> B = 10. Umur anak sekarang adalah 10 tahun."
+                },
+                {
+                    q: "Semua atlet rajin berlatih. Sebagian orang yang rajin berlatih memiliki tubuh atletis. Simpulan yang tepat:",
+                    options: [
+                        "A. Semua atlet memiliki tubuh atletis",
+                        "B. Sebagian atlet tidak memiliki tubuh atletis",
+                        "C. Semua orang yang memiliki tubuh atletis adalah atlet",
+                        "D. Tidak dapat ditarik kesimpulan pasti",
+                        "E. Sebagian atlet rajin berlatih"
+                    ],
+                    answer: 3,
+                    explanation: "Premis tidak menghubungkan langsung atlet dengan tubuh atletis. 'Sebagian orang yang rajin berlatih' bisa jadi bukan dari kelompok 'atlet'. Oleh karena itu, hubungan pasti antara atlet dan tubuh atletis tidak dapat disimpulkan."
+                },
+                {
+                    q: "Jika 3x + 2y = 12 dan x - y = 4, maka nilai 2x + 3y adalah...",
+                    options: [
+                        "A. 4",
+                        "B. 6",
+                        "C. 8",
+                        "D. 10",
+                        "E. 12"
+                    ],
+                    answer: 2,
+                    explanation: "Dari x - y = 4 -> x = y + 4. Substitusi ke 3x + 2y = 12 -> 3(y+4) + 2y = 12 -> 3y + 12 + 2y = 12 -> 5y = 0 -> y = 0. Maka x = 0 + 4 = 4. Nilai 2x + 3y = 2(4) + 3(0) = 8."
+                },
+                {
+                    q: "Sinonim kata 'TENDENSI' adalah...",
+                    options: [
+                        "A. Tegangan",
+                        "B. Kecenderungan",
+                        "C. Tujuan",
+                        "D. Kemampuan",
+                        "E. Hambatan"
+                    ],
+                    answer: 1,
+                    explanation: "Tendensi memiliki arti kecenderungan; kecondongan (pada suatu hal)."
+                },
+                {
+                    q: "Pilih pasangan kata yang paling sesuai! GIGIH : MENYERAH = ... : ...",
+                    options: [
+                        "A. Berani : Takut",
+                        "B. Pintar : Cerdas",
+                        "C. Rajin : Giat",
+                        "D. Cepat : Lari",
+                        "E. Kuat : Otot"
+                    ],
+                    answer: 0,
+                    explanation: "Hubungan antonim (lawan kata). Gigih adalah lawan dari menyerah. Berani adalah lawan dari takut."
+                },
+                {
+                    q: "Dalam sebuah barisan antrean, Doni berada di urutan ke-8 dari depan dan ke-15 dari belakang. Berapa total orang dalam antrean tersebut?",
+                    options: [
+                        "A. 21",
+                        "B. 22",
+                        "C. 23",
+                        "D. 24",
+                        "E. 25"
+                    ],
+                    answer: 1,
+                    explanation: "Total orang = (Urutan dari depan + Urutan dari belakang) - 1. (8 + 15) - 1 = 23 - 1 = 22 orang."
+                },
+                {
+                    q: "Jika A > B dan C < B, maka pernyataan yang pasti benar adalah...",
+                    options: [
+                        "A. A < C",
+                        "B. A = C",
+                        "C. C > A",
+                        "D. A > C",
+                        "E. Tidak bisa ditentukan"
+                    ],
+                    answer: 3,
+                    explanation: "Diketahui A > B. Diketahui juga C < B, yang sama artinya dengan B > C. Disusun menjadi A > B > C. Maka A > C pasti benar."
+                },
+                {
+                    q: "1, 2, 4, 7, 11, 16, ...",
+                    options: [
+                        "A. 21",
+                        "B. 22",
+                        "C. 23",
+                        "D. 24",
+                        "E. 25"
+                    ],
+                    answer: 1,
+                    explanation: "Polanya adalah +1, +2, +3, +4, +5. Maka selanjutnya adalah +6. 16 + 6 = 22."
+                },
+                {
+                    q: "KATA : KALIMAT = ... : ...",
+                    options: [
+                        "A. Huruf : Kata",
+                        "B. Paragraf : Buku",
+                        "C. Bab : Halaman",
+                        "D. Bunyi : Suara",
+                        "E. Baca : Tulis"
+                    ],
+                    answer: 0,
+                    explanation: "Kumpulan kata menyusun kalimat. Analogi yang sejajar adalah kumpulan huruf menyusun kata."
+                },
+                {
+                    q: "Sebuah mobil menempuh jarak 120 km dengan kecepatan 60 km/jam. Berapa lama waktu yang dibutuhkan?",
+                    options: [
+                        "A. 1 jam",
+                        "B. 1,5 jam",
+                        "C. 2 jam",
+                        "D. 2,5 jam",
+                        "E. 3 jam"
+                    ],
+                    answer: 2,
+                    explanation: "Waktu = Jarak / Kecepatan. Waktu = 120 km / 60 km/jam = 2 jam."
+                }
+            ],
+
+            matematika: [
+                {
+                    q: "Pak Budi meminjam uang di bank sebesar Rp 10.000.000 dengan bunga tunggal 12% per tahun. Jika ia mengangsur selama 15 bulan, maka besar angsuran per bulannya adalah...",
+                    options: [
+                        "A. Rp 666.666",
+                        "B. Rp 750.000",
+                        "C. Rp 766.666",
+                        "D. Rp 815.000",
+                        "E. Rp 850.000"
+                    ],
+                    answer: 2,
+                    explanation: "Bunga 1 tahun (12 bulan) = 12%. Bunga 15 bulan = (15/12) * 12% = 15%. Total bunga = 15% * Rp 10.000.000 = Rp 1.500.000. Total pinjaman yang harus dikembalikan = Rp 10.000.000 + Rp 1.500.000 = Rp 11.500.000. Angsuran per bulan = Rp 11.500.000 / 15 = Rp 766.666,67."
+                },
+                {
+                    q: "Sebuah toko pakaian memberikan diskon ganda pada akhir tahun, yaitu 20% + 10%. Jika harga awal sebuah kemeja adalah Rp 250.000, berapa harga yang harus dibayar pembeli?",
+                    options: [
+                        "A. Rp 175.000",
+                        "B. Rp 180.000",
+                        "C. Rp 190.000",
+                        "D. Rp 200.000",
+                        "E. Rp 225.000"
+                    ],
+                    answer: 1,
+                    explanation: "Diskon pertama 20%: Rp 250.000 * 20% = Rp 50.000. Harga setelah diskon 1 = Rp 200.000. Diskon kedua 10% dari harga baru: Rp 200.000 * 10% = Rp 20.000. Harga akhir = Rp 200.000 - Rp 20.000 = Rp 180.000."
+                },
+                {
+                    q: "Sebuah bak mandi berbentuk balok memiliki ukuran panjang 1,5 meter, lebar 1 meter, dan tinggi 0,8 meter. Jika bak tersebut diisi air melalui keran dengan debit 20 liter/menit, berapa lama waktu yang dibutuhkan hingga bak terisi penuh?",
+                    options: [
+                        "A. 1 jam",
+                        "B. 1 jam 15 menit",
+                        "C. 1 jam 30 menit",
+                        "D. 2 jam",
+                        "E. 2,5 jam"
+                    ],
+                    answer: 0,
+                    explanation: "Volume bak = 1,5m * 1m * 0,8m = 1,2 m³ = 1200 liter. Debit = 20 liter/menit. Waktu = Volume / Debit = 1200 / 20 = 60 menit = 1 jam."
+                },
+                {
+                    q: "Dalam sebuah kelas yang terdiri dari 40 siswa, 25 siswa menyukai matematika, 20 siswa menyukai fisika, dan 10 siswa tidak menyukai keduanya. Berapa jumlah siswa yang menyukai kedua mata pelajaran tersebut?",
+                    options: [
+                        "A. 5 orang",
+                        "B. 10 orang",
+                        "C. 15 orang",
+                        "D. 20 orang",
+                        "E. 25 orang"
+                    ],
+                    answer: 2,
+                    explanation: "Rumus himpunan: n(S) = n(M) + n(F) - n(M∩F) + n(Tidak suka). 40 = 25 + 20 - x + 10. 40 = 55 - x. x = 15. Jadi yang suka keduanya ada 15 siswa."
+                },
+                {
+                    q: "Perbandingan kelereng Andi dan Budi adalah 3 : 5. Jika selisih kelereng mereka adalah 16 butir, berapa jumlah total kelereng keduanya?",
+                    options: [
+                        "A. 48",
+                        "B. 56",
+                        "C. 64",
+                        "D. 72",
+                        "E. 80"
+                    ],
+                    answer: 2,
+                    explanation: "Selisih perbandingan = 5 - 3 = 2 bagian. 2 bagian = 16 kelereng -> 1 bagian = 8 kelereng. Jumlah perbandingan = 3 + 5 = 8 bagian. Jumlah kelereng = 8 bagian * 8 = 64 kelereng."
+                },
+                {
+                    q: "Sebuah peta dibuat dengan skala 1 : 1.500.000. Jika jarak sebenarnya antara dua kota adalah 60 km, jarak pada peta adalah...",
+                    options: [
+                        "A. 2 cm",
+                        "B. 4 cm",
+                        "C. 6 cm",
+                        "D. 8 cm",
+                        "E. 10 cm"
+                    ],
+                    answer: 1,
+                    explanation: "Jarak sebenarnya = 60 km = 6.000.000 cm. Jarak peta = Jarak sebenarnya / Skala = 6.000.000 / 1.500.000 = 4 cm."
+                },
+                {
+                    q: "Fungsi f(x) = x² - 4x - 5 akan memotong sumbu X pada titik...",
+                    options: [
+                        "A. (5, 0) dan (-1, 0)",
+                        "B. (-5, 0) dan (1, 0)",
+                        "C. (2, 0) dan (-2, 0)",
+                        "D. (4, 0) dan (1, 0)",
+                        "E. (0, -5) dan (0, 1)"
+                    ],
+                    answer: 0,
+                    explanation: "Memotong sumbu X berarti y (atau f(x)) = 0. x² - 4x - 5 = 0. Difaktorkan menjadi (x - 5)(x + 1) = 0. x = 5 atau x = -1. Titik potongnya adalah (5,0) dan (-1,0)."
+                },
+                {
+                    q: "Jika log 2 = p dan log 3 = q, maka nilai dari log 12 adalah...",
+                    options: [
+                        "A. p + 2q",
+                        "B. 2p + q",
+                        "C. 2(p + q)",
+                        "D. p * q",
+                        "E. p² * q"
+                    ],
+                    answer: 1,
+                    explanation: "log 12 = log (4 * 3) = log (2² * 3) = log 2² + log 3 = 2 log 2 + log 3 = 2p + q."
+                },
+                {
+                    q: "Suku ke-4 dari barisan aritmetika adalah 11, sedangkan suku ke-8 adalah 23. Beda dari barisan tersebut adalah...",
+                    options: [
+                        "A. 2",
+                        "B. 3",
+                        "C. 4",
+                        "D. 5",
+                        "E. 6"
+                    ],
+                    answer: 1,
+                    explanation: "U4 = a + 3b = 11. U8 = a + 7b = 23. Eliminasi a: (a + 7b) - (a + 3b) = 23 - 11 -> 4b = 12 -> b = 3. Bedanya adalah 3."
+                },
+                {
+                    q: "Sebuah dadu dilempar satu kali. Peluang munculnya mata dadu ganjil atau prima adalah...",
+                    options: [
+                        "A. 1/2",
+                        "B. 2/3",
+                        "C. 5/6",
+                        "D. 1/3",
+                        "E. 1"
+                    ],
+                    answer: 1,
+                    explanation: "Ruang sampel = {1,2,3,4,5,6} -> n(S) = 6. Kejadian Ganjil (A) = {1,3,5}. Kejadian Prima (B) = {2,3,5}. A U B = {1,2,3,5} -> n(AUB) = 4. Peluang = 4/6 = 2/3."
+                },
+                {
+                    q: "Dalam suatu tes, jawaban benar diberi nilai 4, salah -1, dan tidak dijawab 0. Dari 50 soal, Ali menjawab 45 soal dan 36 di antaranya benar. Nilai yang diperoleh Ali adalah...",
+                    options: [
+                        "A. 125",
+                        "B. 135",
+                        "C. 144",
+                        "D. 145",
+                        "E. 150"
+                    ],
+                    answer: 1,
+                    explanation: "Soal benar = 36 -> Skor = 36 * 4 = 144. Soal salah = 45 - 36 = 9 -> Skor = 9 * (-1) = -9. Soal tidak dijawab = 50 - 45 = 5 -> Skor = 0. Total nilai = 144 - 9 = 135."
+                },
+                {
+                    q: "Luas sebuah persegi panjang adalah 120 cm². Jika panjangnya 7 cm lebih dari lebarnya, maka keliling persegi panjang tersebut adalah...",
+                    options: [
+                        "A. 42 cm",
+                        "B. 44 cm",
+                        "C. 46 cm",
+                        "D. 48 cm",
+                        "E. 50 cm"
+                    ],
+                    answer: 2,
+                    explanation: "Misal lebar = x, panjang = x + 7. Luas = p * l = (x+7) * x = 120 -> x² + 7x - 120 = 0. Faktorkan: (x+15)(x-8) = 0. Lebar positif, x = 8. Panjang = 8 + 7 = 15. Keliling = 2(p+l) = 2(15+8) = 2(23) = 46 cm."
+                },
+                {
+                    q: "Dua buah dadu dilempar bersamaan. Peluang jumlah mata dadu yang muncul adalah 7 atau 10 adalah...",
+                    options: [
+                        "A. 9/36",
+                        "B. 8/36",
+                        "C. 7/36",
+                        "D. 6/36",
+                        "E. 5/36"
+                    ],
+                    answer: 0,
+                    explanation: "Jumlah 7: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1) -> 6 kejadian. Jumlah 10: (4,6),(5,5),(6,4) -> 3 kejadian. Total kejadian = 6 + 3 = 9. Peluang = 9/36 = 1/4."
+                },
+                {
+                    q: "Rata-rata berat badan 10 siswa adalah 60 kg. Jika berat badan seorang siswa bernama Budi ditambahkan, rata-ratanya menjadi 61 kg. Berat badan Budi adalah...",
+                    options: [
+                        "A. 65 kg",
+                        "B. 70 kg",
+                        "C. 71 kg",
+                        "D. 75 kg",
+                        "E. 80 kg"
+                    ],
+                    answer: 2,
+                    explanation: "Total berat awal = 10 * 60 = 600 kg. Total siswa baru = 11. Total berat baru = 11 * 61 = 671 kg. Berat Budi = 671 - 600 = 71 kg."
+                },
+                {
+                    q: "Batas nilai m agar persamaan kuadrat x² - (m-2)x + 9 = 0 mempunyai dua akar real yang berbeda adalah...",
+                    options: [
+                        "A. m < -4 atau m > 8",
+                        "B. m < -8 atau m > 4",
+                        "C. -4 < m < 8",
+                        "D. -8 < m < 4",
+                        "E. m < 4 atau m > 8"
+                    ],
+                    answer: 0,
+                    explanation: "Syarat 2 akar real beda: D > 0. b² - 4ac > 0. (-(m-2))² - 4(1)(9) > 0. m² - 4m + 4 - 36 > 0. m² - 4m - 32 > 0. Faktorkan: (m-8)(m+4) > 0. Pembuat nol: 8 dan -4. Daerah penyelesaian (uji titik): m < -4 atau m > 8."
+                },
+                {
+                    q: "Nilai maksimum dari fungsi f(x) = -2x² + 8x - 5 adalah...",
+                    options: [
+                        "A. -5",
+                        "B. 3",
+                        "C. 5",
+                        "D. 8",
+                        "E. 11"
+                    ],
+                    answer: 1,
+                    explanation: "Sumbu simetri x = -b/2a = -8 / (2*-2) = -8 / -4 = 2. Masukkan x=2 ke fungsi: f(2) = -2(2)² + 8(2) - 5 = -8 + 16 - 5 = 3."
+                },
+                {
+                    q: "Turunan pertama dari f(x) = (2x - 3)³ adalah...",
+                    options: [
+                        "A. 6(2x - 3)²",
+                        "B. 3(2x - 3)²",
+                        "C. (2x - 3)²",
+                        "D. 6(2x - 3)³",
+                        "E. 2(2x - 3)²"
+                    ],
+                    answer: 0,
+                    explanation: "Gunakan aturan rantai. y = u³. y' = 3u² * u'. U = 2x - 3, u' = 2. Jadi, f'(x) = 3(2x - 3)² * 2 = 6(2x - 3)²."
+                },
+                {
+                    q: "Jika matriks A = (2 3, 1 4) dan B = (1 -1, 0 2), maka determinan dari A * B adalah...",
+                    options: [
+                        "A. 5",
+                        "B. 8",
+                        "C. 10",
+                        "D. 12",
+                        "E. 15"
+                    ],
+                    answer: 2,
+                    explanation: "Sifat determinan: |AB| = |A| * |B|. |A| = (2*4) - (3*1) = 8 - 3 = 5. |B| = (1*2) - (-1*0) = 2 - 0 = 2. |AB| = 5 * 2 = 10."
+                },
+                {
+                    q: "Sebuah kerucut memiliki diameter alas 14 cm dan garis pelukis 25 cm. Tinggi kerucut tersebut adalah... (π = 22/7)",
+                    options: [
+                        "A. 15 cm",
+                        "B. 20 cm",
+                        "C. 24 cm",
+                        "D. 28 cm",
+                        "E. 30 cm"
+                    ],
+                    answer: 2,
+                    explanation: "Jari-jari (r) = 7 cm. Garis pelukis (s) = 25 cm. Menggunakan Pythagoras: t² = s² - r² = 25² - 7² = 625 - 49 = 576. t = √576 = 24 cm."
+                },
+                {
+                    q: "Hasil dari ∫ (3x² - 4x + 5) dx adalah...",
+                    options: [
+                        "A. x³ - 2x² + 5x + C",
+                        "B. 3x³ - 4x² + 5x + C",
+                        "C. x³ - 4x² + 5x + C",
+                        "D. 6x - 4 + C",
+                        "E. 1/3x³ - 2x² + 5x + C"
+                    ],
+                    answer: 0,
+                    explanation: "Integral pangkat: ∫x^n dx = (1/(n+1)) * x^(n+1). ∫ 3x² dx = (3/3)x³ = x³. ∫ -4x dx = (-4/2)x² = -2x². ∫ 5 dx = 5x. Gabungkan: x³ - 2x² + 5x + C."
+                },
+                {
+                    q: "Pada segitiga siku-siku ABC, siku-siku di B, diketahui panjang AB = 5 cm dan BC = 12 cm. Nilai sin A adalah...",
+                    options: [
+                        "A. 5/13",
+                        "B. 12/13",
+                        "C. 5/12",
+                        "D. 13/5",
+                        "E. 13/12"
+                    ],
+                    answer: 1,
+                    explanation: "Sisi depan A adalah BC = 12. Sisi samping A adalah AB = 5. Sisi miring AC = √(5² + 12²) = √(25 + 144) = √169 = 13. sin A = depan / miring = BC / AC = 12 / 13."
+                },
+                {
+                    q: "Jumlah tak hingga dari deret geometri 16 + 8 + 4 + 2 + ... adalah...",
+                    options: [
+                        "A. 28",
+                        "B. 30",
+                        "C. 32",
+                        "D. 34",
+                        "E. 36"
+                    ],
+                    answer: 2,
+                    explanation: "Deret geometri dengan a = 16 dan rasio r = 8/16 = 1/2. Rumus jumlah tak hingga S = a / (1 - r) = 16 / (1 - 1/2) = 16 / (1/2) = 16 * 2 = 32."
+                },
+                {
+                    q: "Seutas tali dipotong menjadi 5 bagian dengan panjang membentuk barisan aritmetika. Jika panjang tali terpendek 1,2 m dan terpanjang 2,4 m, maka panjang tali semula adalah...",
+                    options: [
+                        "A. 8 m",
+                        "B. 9 m",
+                        "C. 10 m",
+                        "D. 12 m",
+                        "E. 15 m"
+                    ],
+                    answer: 1,
+                    explanation: "Barisan aritmetika: n = 5, a = U1 = 1,2, U5 = 2,4. Panjang tali semula adalah Sn (S5). S5 = n/2 * (a + Un) = 5/2 * (1,2 + 2,4) = 2,5 * 3,6 = 9 m."
+                },
+                {
+                    q: "Dalam sebuah kotak terdapat 5 kelereng merah dan 3 kelereng putih. Jika diambil 2 kelereng sekaligus secara acak, peluang terambilnya keduanya kelereng merah adalah...",
+                    options: [
+                        "A. 5/14",
+                        "B. 5/28",
+                        "C. 10/28",
+                        "D. 15/28",
+                        "E. 3/14"
+                    ],
+                    answer: 0,
+                    explanation: "Total kelereng = 8. Kombinasi 2 dari 8: C(8,2) = 8! / (2!*6!) = (8*7)/2 = 28 cara. Keduanya merah, kombinasi 2 dari 5 merah: C(5,2) = 5! / (2!*3!) = (5*4)/2 = 10 cara. Peluang = 10 / 28 = 5 / 14."
+                },
+                {
+                    q: "Titik P(-3, 5) dicerminkan terhadap garis y = x, kemudian ditranslasikan oleh T = (2, -1). Bayangan akhir titik P adalah...",
+                    options: [
+                        "A. (3, 2)",
+                        "B. (7, -4)",
+                        "C. (7, -2)",
+                        "D. (3, -4)",
+                        "E. (-1, 4)"
+                    ],
+                    answer: 1,
+                    explanation: "Pencerminan thd y=x mengubah (x,y) jadi (y,x). P(-3,5) -> P'(5,-3). Translasi T(2,-1) menambahkan ke x dan y. P''(5+2, -3-1) = P''(7, -4)."
+                }
+            ],
+
+            bahasa_indonesia: [
+                {
+                    passage: "Pemanasan global merupakan masalah lingkungan yang semakin mendesak. Peningkatan emisi gas rumah kaca akibat aktivitas manusia, seperti pembakaran bahan bakar fosil dan deforestasi, menyebabkan suhu bumi terus meningkat. Dampaknya sangat luas, mulai dari mencairnya es di kutub yang menyebabkan naiknya permukaan air laut, perubahan pola cuaca ekstrem, hingga terancamnya keanekaragaman hayati. Untuk mengatasi krisis ini, diperlukan tindakan kolektif dan segera dari seluruh negara untuk mengurangi jejak karbon dan beralih ke sumber energi terbarukan.",
+                    q: "Ide pokok dari paragraf di atas adalah...",
+                    options: [
+                        "A. Pemanasan global disebabkan oleh pembakaran bahan bakar fosil.",
+                        "B. Mencairnya es di kutub menyebabkan kenaikan permukaan air laut.",
+                        "C. Pemanasan global adalah krisis mendesak yang memerlukan tindakan segera mengurangi emisi.",
+                        "D. Sumber energi terbarukan adalah solusi satu-satunya untuk lingkungan.",
+                        "E. Deforestasi merupakan penyumbang utama gas rumah kaca."
+                    ],
+                    answer: 2,
+                    explanation: "Ide pokok merupakan gagasan utama yang menjiwai seluruh paragraf. Paragraf tersebut membahas tentang pemanasan global sebagai masalah mendesak akibat aktivitas manusia, dampaknya, serta perlunya tindakan kolektif menguranginya (tercakup komprehensif pada opsi C)."
+                },
+                {
+                    passage: "Pemanasan global merupakan masalah lingkungan yang semakin mendesak. Peningkatan emisi gas rumah kaca akibat aktivitas manusia, seperti pembakaran bahan bakar fosil dan deforestasi, menyebabkan suhu bumi terus meningkat. Dampaknya sangat luas, mulai dari mencairnya es di kutub yang menyebabkan naiknya permukaan air laut, perubahan pola cuaca ekstrem, hingga terancamnya keanekaragaman hayati. Untuk mengatasi krisis ini, diperlukan tindakan kolektif dan segera dari seluruh negara untuk mengurangi jejak karbon dan beralih ke sumber energi terbarukan.",
+                    q: "Makna kata 'deforestasi' pada teks di atas adalah...",
+                    options: [
+                        "A. Penanaman hutan kembali",
+                        "B. Penebangan hutan",
+                        "C. Pelestarian hutan",
+                        "D. Kebakaran hutan",
+                        "E. Pemanfaatan hasil hutan"
+                    ],
+                    answer: 1,
+                    explanation: "Dalam konteks pemanasan global, deforestasi berarti penebangan hutan secara luas yang mengurangi fungsi hutan sebagai penyerap karbon dioksida."
+                },
+                {
+                    q: "Penulisan kata serapan yang BENAR menurut EYD adalah...",
+                    options: [
+                        "A. Standarisasi",
+                        "B. Kwalitas",
+                        "C. Analisa",
+                        "D. Frekuensi",
+                        "E. Sistim"
+                    ],
+                    answer: 3,
+                    explanation: "Bentuk baku menurut KBBI: Frekuensi. Sedangkan yang lain bakunya adalah: Standardisasi, Kualitas, Analisis, Sistem."
+                },
+                {
+                    q: "Kalimat yang efektif adalah...",
+                    options: [
+                        "A. Bagi semua mahasiswa yang mengambil mata kuliah ini harus hadir tepat waktu.",
+                        "B. Makalah ini membahas tentang pentingnya menjaga kebersihan lingkungan.",
+                        "C. Kepada para tamu undangan dipersilakan untuk memasuki ruangan.",
+                        "D. Karena tidak diundang, maka dia tidak datang ke pesta itu.",
+                        "E. Pemerintah sedang mengupayakan peningkatan kualitas pendidikan."
+                    ],
+                    answer: 4,
+                    explanation: "Kalimat E paling efektif dan strukturnya benar (S-P-O). A salah karena ada kata 'Bagi' di depan subjek. B salah karena ada kata 'tentang' setelah kata kerja transitif 'membahas'. C salah karena ada 'Kepada' di depan subjek. D salah krn konjungsi ganda 'karena' dan 'maka'."
+                },
+                {
+                    q: "Penggunaan tanda koma (,) yang TEPAT terdapat pada kalimat...",
+                    options: [
+                        "A. Saya ingin membeli buku, dan alat tulis.",
+                        "B. Meskipun lelah, ia tetap menyelesaikan tugasnya.",
+                        "C. Ayah membaca koran di teras sedangkan, ibu memasak di dapur.",
+                        "D. Barang-barang itu terdiri atas, meja, kursi, dan lemari.",
+                        "E. Dia tidak datang, karena hujan deras."
+                    ],
+                    answer: 1,
+                    explanation: "Tanda koma digunakan untuk memisahkan anak kalimat dari induk kalimat jika anak kalimat mendahului induk kalimat ('Meskipun lelah'). A salah (tak perlu koma sblm 'dan' krn bukan perincian >2). C salah (koma harus sebelum 'sedangkan'). D salah (koma tak perlu sblm perincian jika sudah ada 'atas'). E salah (tak perlu koma sblm 'karena')."
+                },
+                {
+                    passage: "Teknologi kecerdasan buatan (AI) telah berkembang pesat dalam dekade terakhir. AI tidak hanya mampu melakukan tugas-tugas repetitif dengan cepat, tetapi juga mulai menguasai kemampuan kognitif kompleks seperti analisis data, pengenalan wajah, dan bahkan pembuatan karya seni. Meskipun AI menjanjikan efisiensi dan inovasi di berbagai sektor, kekhawatiran mengenai dampaknya terhadap lapangan pekerjaan manusia dan isu privasi data semakin meningkat. Penting bagi pembuat kebijakan untuk merumuskan regulasi yang tepat agar teknologi ini membawa manfaat maksimal tanpa mengorbankan kesejahteraan masyarakat.",
+                    q: "Tujuan utama penulis dalam teks di atas adalah...",
+                    options: [
+                        "A. Mempromosikan penggunaan AI di semua sektor industri.",
+                        "B. Menjelaskan secara detail cara kerja teknologi AI.",
+                        "C. Memperingatkan bahaya AI yang dapat menggantikan manusia sepenuhnya.",
+                        "D. Menggambarkan perkembangan AI beserta potensi manfaat dan tantangannya.",
+                        "E. Mendesak penghentian pengembangan AI demi melindungi lapangan pekerjaan."
+                    ],
+                    answer: 3,
+                    explanation: "Penulis secara seimbang memaparkan perkembangan positif AI (efisiensi, inovasi) sekaligus tantangannya (lapangan kerja, privasi) dan menutup dengan perlunya regulasi. Pilihan D adalah yang paling objektif merangkum tujuan ini."
+                },
+                {
+                    passage: "Teknologi kecerdasan buatan (AI) telah berkembang pesat dalam dekade terakhir. AI tidak hanya mampu melakukan tugas-tugas repetitif dengan cepat, tetapi juga mulai menguasai kemampuan kognitif kompleks seperti analisis data, pengenalan wajah, dan bahkan pembuatan karya seni. Meskipun AI menjanjikan efisiensi dan inovasi di berbagai sektor, kekhawatiran mengenai dampaknya terhadap lapangan pekerjaan manusia dan isu privasi data semakin meningkat. Penting bagi pembuat kebijakan untuk merumuskan regulasi yang tepat agar teknologi ini membawa manfaat maksimal tanpa mengorbankan kesejahteraan masyarakat.",
+                    q: "Berdasarkan teks di atas, tantangan yang TIDAK disebutkan terkait perkembangan AI adalah...",
+                    options: [
+                        "A. Berkurangnya lapangan pekerjaan bagi manusia.",
+                        "B. Isu privasi data pengguna.",
+                        "C. Biaya pengembangan teknologi yang sangat mahal.",
+                        "D. Kebutuhan akan regulasi yang tepat dari pemerintah.",
+                        "E. Ancaman terhadap kesejahteraan masyarakat jika tidak diatur."
+                    ],
+                    answer: 2,
+                    explanation: "Teks menyebutkan tentang lapangan pekerjaan (A), privasi data (B), regulasi (D), dan kesejahteraan (E). Biaya pengembangan yang mahal (C) sama sekali tidak disinggung dalam teks."
+                },
+                {
+                    q: "Kalimat manakah yang mengandung majas metafora?",
+                    options: [
+                        "A. Wajahnya bersinar bagaikan rembulan di malam hari.",
+                        "B. Perpustakaan adalah gudang ilmu bagi para siswa.",
+                        "C. Suaranya menggelegar membelah angkasa.",
+                        "D. Angin malam berbisik pelan di telingaku.",
+                        "E. Ia menangis tersedu-sedu meratapi nasibnya."
+                    ],
+                    answer: 1,
+                    explanation: "Metafora adalah majas perbandingan langsung tanpa kata pembanding (seperti, bagai). 'Perpustakaan adalah gudang ilmu' membandingkan perpustakaan dengan gudang secara langsung. A (Simile), C (Hiperbola), D (Personifikasi)."
+                },
+                {
+                    q: "Penulisan huruf kapital yang BENAR terdapat pada kalimat...",
+                    options: [
+                        "A. Ayah baru saja pulang dari kota Solo.",
+                        "B. Dia bercita-cita menjadi seorang Gubernur.",
+                        "C. Kami membeli gula Jawa di pasar tradisional.",
+                        "D. Suku dani tinggal di lembah Baliem, Papua.",
+                        "E. Perjalanan dilanjutkan melintasi Sungai Kapuas."
+                    ],
+                    answer: 4,
+                    explanation: "A salah (Kota Solo). B salah (gubernur, tidak diikuti nama tempat/orang). C salah (gula jawa, nama jenis). D salah (Suku Dani). E benar, huruf kapital digunakan untuk nama geografi (Sungai Kapuas)."
+                },
+                {
+                    q: "Pilihlah kalimat yang menggunakan ragam bahasa baku yang paling tepat!",
+                    options: [
+                        "A. Kita nggak usah mikirin omongan orang lain.",
+                        "B. Pasukan itu berhasil mengeleminir kekuatan musuh.",
+                        "C. Mereka merubah jadwal pertemuan menjadi hari esok.",
+                        "D. Pasien harus mengonsumsi obat sesuai resep dokter.",
+                        "E. Proyek ini memakan biaya yang sangat mahal sekali."
+                    ],
+                    answer: 3,
+                    explanation: "A (bahasa gaul: nggak, mikirin). B (tidak baku: mengeleminir, seharusnya mengeliminasi). C (tidak baku: merubah, seharusnya mengubah dari kata dasar ubah). D baku dan efektif. E (berlebihan/pleonasme: sangat mahal sekali)."
+                },
+                {
+                    passage: "Pemerintah berencana merevitalisasi transportasi umum di ibu kota. Langkah ini diambil untuk mengurangi kemacetan yang merugikan negara triliunan rupiah setiap tahunnya. Rencananya, armada bus akan ditambah, dan jalur MRT akan diperpanjang hingga kawasan penyangga. Selain itu, tarif akan disubsidi agar terjangkau bagi masyarakat kelas menengah ke bawah. Diharapkan dengan perbaikan fasilitas dan aksesibilitas, masyarakat akan beralih meninggalkan kendaraan pribadi.",
+                    q: "Pernyataan yang sesuai dengan teks di atas adalah...",
+                    options: [
+                        "A. Kemacetan tidak memberikan dampak ekonomi yang signifikan.",
+                        "B. Hanya jalur MRT yang menjadi fokus revitalisasi pemerintah.",
+                        "C. Subsidi tarif ditujukan bagi masyarakat kelas atas.",
+                        "D. Tujuan utama revitalisasi adalah agar masyarakat beralih dari kendaraan pribadi.",
+                        "E. Penambahan armada bus hanya dilakukan di kawasan penyangga."
+                    ],
+                    answer: 3,
+                    explanation: "A salah (merugikan triliunan). B salah (bus juga ditambah). C salah (subsidi untuk menengah ke bawah). E salah (tidak ada keterangan bus hanya di kawasan penyangga). D benar sesuai kalimat terakhir 'Diharapkan... masyarakat beralih meninggalkan kendaraan pribadi'."
+                },
+                {
+                    passage: "Pemerintah berencana merevitalisasi transportasi umum di ibu kota. Langkah ini diambil untuk mengurangi kemacetan yang merugikan negara triliunan rupiah setiap tahunnya. Rencananya, armada bus akan ditambah, dan jalur MRT akan diperpanjang hingga kawasan penyangga. Selain itu, tarif akan disubsidi agar terjangkau bagi masyarakat kelas menengah ke bawah. Diharapkan dengan perbaikan fasilitas dan aksesibilitas, masyarakat akan beralih meninggalkan kendaraan pribadi.",
+                    q: "Antonim dari kata 'merevitalisasi' pada teks tersebut adalah...",
+                    options: [
+                        "A. Menghidupkan kembali",
+                        "B. Memperburuk",
+                        "C. Memperbarui",
+                        "D. Menelantarkan",
+                        "E. Menyuburkan"
+                    ],
+                    answer: 3,
+                    explanation: "Revitalisasi berarti proses, cara, dan perbuatan untuk menghidupkan atau menggiatkan kembali. Antonim atau lawan kata yang paling tepat dalam konteks fasilitas adalah menelantarkan atau membiarkan rusak/tidak terawat."
+                },
+                {
+                    q: "Kalimat manakah yang TIDAK koheren (padu) jika disusun menjadi sebuah paragraf?\n(1) Sampah plastik menjadi masalah global yang sulit diatasi.\n(2) Plastik membutuhkan waktu ratusan tahun untuk terurai di alam.\n(3) Banyak mamalia laut mati akibat menelan sampah plastik.\n(4) Proses pembuatan plastik menggunakan bahan kimia berbahaya.\n(5) Penggunaan botol kaca lebih disarankan daripada botol plastik.",
+                    options: [
+                        "A. Kalimat (1)",
+                        "B. Kalimat (2)",
+                        "C. Kalimat (3)",
+                        "D. Kalimat (4)",
+                        "E. Kalimat (5)"
+                    ],
+                    answer: 3,
+                    explanation: "Paragraf membicarakan masalah sampah plastik setelah jadi sampah dan dampaknya (waktu urai, dampak ke hewan, solusi penggunaan botol). Kalimat (4) membahas 'proses pembuatan' yang melenceng dari fokus masalah 'sampah' (pasca produksi)."
+                },
+                {
+                    q: "Manakah kalimat pasif yang tepat?",
+                    options: [
+                        "A. Saya dipukul oleh pencuri itu.",
+                        "B. Buku itu saya sudah baca kemarin.",
+                        "C. Budi sedang dikerjakan tugas matematikanya.",
+                        "D. Gedung tinggi itu dibangun oleh kontraktor asing.",
+                        "E. Kami akan dibahas masalah ini besok."
+                    ],
+                    answer: 3,
+                    explanation: "Kalimat pasif ditandai dengan subjek dikenai pekerjaan dan predikat berawalan di-/ter-. D benar. A (kurang tepat susunannya, 'Pencuri itu memukul saya'). B (Harusnya 'Buku itu sudah saya baca'). C (Struktur kacau). E (Harusnya 'Masalah ini akan kami bahas')."
+                },
+                {
+                    q: "Kata 'memengaruhi' berasal dari kata dasar...",
+                    options: [
+                        "A. Pengaruh",
+                        "B. Pengaruh-i",
+                        "C. Pangaruh",
+                        "D. Pengaruh",
+                        "E. Mempengaruh"
+                    ],
+                    answer: 0,
+                    explanation: "Kata dasarnya adalah 'pengaruh'. Huruf 'p' luluh ketika mendapat awalan me- karena 'pengaruh' diawali p dan diikuti huruf vokal (e). Menjadi me + pengaruh + i = memengaruhi."
+                },
+                {
+                    passage: "Buku ini sangat bermanfaat bagi mahasiswa. Bahasa yang digunakan mudah dipahami, meskipun membahas teori yang cukup berat. Sayangnya, kertas yang digunakan tipis sehingga mudah robek. Selain itu, harganya tergolong mahal untuk ukuran kantong mahasiswa.",
+                    q: "Teks di atas merupakan cuplikan dari bentuk tulisan...",
+                    options: [
+                        "A. Eksposisi",
+                        "B. Resensi",
+                        "C. Argumentasi",
+                        "D. Deskripsi",
+                        "E. Narasi"
+                    ],
+                    answer: 1,
+                    explanation: "Teks tersebut menilai/menimbang suatu karya (buku) dengan menyebutkan kelebihan (bahasa mudah) dan kekurangan (kertas tipis, harga mahal). Ini adalah ciri khas resensi buku."
+                },
+                {
+                    q: "Makna peribahasa 'Air beriak tanda tak dalam' adalah...",
+                    options: [
+                        "A. Orang yang pendiam biasanya memiliki banyak ilmu.",
+                        "B. Orang yang banyak bicara biasanya tidak banyak ilmunya.",
+                        "C. Suasana yang ribut menandakan adanya bahaya besar.",
+                        "D. Sesuatu yang terlihat berbahaya sebenarnya aman.",
+                        "E. Orang yang berilmu akan selalu merendahkan diri."
+                    ],
+                    answer: 1,
+                    explanation: "Peribahasa ini menyindir orang yang banyak bicara (beriak/berisik) biasanya memiliki pengetahuan yang dangkal (tak dalam)."
+                },
+                {
+                    q: "Gabungan kata (kata majemuk) yang penulisannya BENAR adalah...",
+                    options: [
+                        "A. Tanggungjawab",
+                        "B. Tanda tangan",
+                        "C. Beritahu",
+                        "D. Orangtua",
+                        "E. Kerja sama"
+                    ],
+                    answer: 4,
+                    explanation: "Penulisan baku: tanggung jawab, tanda tangan, beri tahu, orang tua, kerja sama. Pilihan E adalah satu-satunya yang disajikan dengan benar jika dipisah (kerja sama). Wait, B juga benar (tanda tangan dipisah). Mari kita asumsikan yang ditanya yang terpisah dengan benar. Jawaban B dan E keduanya benar secara EYD. *Koreksi:* E adalah jawaban yang paling sering diujikan sebagai pengecoh. Kerja sama harus dipisah."
+                },
+                {
+                    q: "Penulisan gelar akademik yang benar adalah...",
+                    options: [
+                        "A. Prof. DR. Ir. H. Budi Santoso, M.Sc.",
+                        "B. Prof. Dr. Ir. H. Budi Santoso, M.Sc",
+                        "C. Prof. Dr. Ir. H. Budi Santoso, M.Sc.",
+                        "D. Prof, Dr, Ir, H. Budi Santoso, M.Sc.",
+                        "E. Prof. Dr. Ir. H Budi Santoso. M.Sc."
+                    ],
+                    answer: 2,
+                    explanation: "Gelar Dr. (Doktor) huruf 'D' besar, 'r' kecil. Setelah setiap singkatan gelar menggunakan titik. Antara nama dan gelar akademik di belakang dipisah dengan koma. Dan setelah gelar terakhir ada titik."
+                },
+                {
+                    q: "Kalimat yang mengandung ungkapan idiomatik adalah...",
+                    options: [
+                        "A. Ia mencuci tangan dengan sabun agar bersih.",
+                        "B. Kasus korupsi itu membuat beberapa pejabat cuci tangan.",
+                        "C. Dokter menyuruh pasien itu banyak minum air putih.",
+                        "D. Ibu membeli meja hijau untuk melengkapi perabotan.",
+                        "E. Kaki kanannya terluka akibat terjatuh dari sepeda."
+                    ],
+                    answer: 1,
+                    explanation: "'Cuci tangan' pada opsi B bermakna kiasan/idiom yaitu tidak mau turut campur dalam suatu urusan/melepaskan tanggung jawab. Sedangkan di opsi A maknanya denotatif/sebenarnya."
+                },
+                {
+                    passage: "Pendidikan karakter di sekolah dasar memegang peranan krusial. Pada usia ini, anak-anak ibarat spons yang menyerap segala informasi dan perilaku di sekitarnya. Jika guru dan lingkungan sekolah menanamkan nilai-nilai kejujuran, disiplin, dan empati secara konsisten, anak akan tumbuh dengan fondasi moral yang kuat. Sebaliknya, pengabaian terhadap aspek ini dapat melahirkan generasi yang cerdas secara akademik namun miskin etika.",
+                    q: "Simpulan paragraf tersebut adalah...",
+                    options: [
+                        "A. Anak SD suka meniru perilaku buruk gurunya.",
+                        "B. Pendidikan karakter di SD menentukan kualitas moral generasi masa depan.",
+                        "C. Kecerdasan akademik lebih penting daripada pendidikan etika.",
+                        "D. Guru SD harus memiliki karakter jujur dan disiplin.",
+                        "E. Anak-anak di sekolah dasar ibarat spons yang menyerap air."
+                    ],
+                    answer: 1,
+                    explanation: "Simpulan merangkum inti seluruh bacaan. Teks menekankan pentingnya peran pendidikan karakter di SD (usia kritis) untuk membentuk fondasi moral, yang jika diabaikan berakibat buruk."
+                },
+                {
+                    q: "Kalimat tanya retoris terdapat pada...",
+                    options: [
+                        "A. Kapan ujian akhir semester akan dilaksanakan?",
+                        "B. Siapa yang bertanggung jawab atas kebersihan kelas ini?",
+                        "C. Apakah pantas seorang pemimpin berbohong kepada rakyatnya?",
+                        "D. Bagaimana cara membuat kue bolu yang lembut?",
+                        "E. Di mana kamu meletakkan kunci mobilku?"
+                    ],
+                    answer: 2,
+                    explanation: "Kalimat tanya retoris adalah pertanyaan yang tidak memerlukan jawaban karena jawabannya sudah jelas, biasanya digunakan untuk menegaskan atau menyindir."
+                },
+                {
+                    q: "Kata penghubung (konjungsi) intrakalimat yang menyatakan pertentangan adalah...",
+                    options: [
+                        "A. Oleh karena itu",
+                        "B. Sehingga",
+                        "C. Tetapi",
+                        "D. Dan",
+                        "E. Atau"
+                    ],
+                    answer: 2,
+                    explanation: "Konjungsi 'tetapi', 'melainkan', 'sedangkan' adalah konjungsi intrakalimat (di dalam satu kalimat) yang menyatakan hubungan pertentangan."
+                },
+                {
+                    q: "Penggunaan tanda petik tunggal ('...') yang tepat adalah untuk...",
+                    options: [
+                        "A. Mengapit kutipan langsung dari pembicaraan.",
+                        "B. Mengapit judul buku yang ada di dalam kalimat.",
+                        "C. Mengapit istilah asing yang belum sepenuhnya diserap.",
+                        "D. Mengapit makna, terjemahan, atau penjelasan kata/ungkapan.",
+                        "E. Mengapit nama bab dalam suatu buku."
+                    ],
+                    answer: 3,
+                    explanation: "Menurut PUEBI, tanda petik tunggal dipakai untuk mengapit petikan yang terdapat dalam petikan lain, serta mengapit makna, terjemahan, atau penjelasan kata atau ungkapan. (Contoh: tergugat 'yang digugat')."
+                },
+                {
+                    passage: "Olahraga lari semakin digemari masyarakat perkotaan. Selain murah dan mudah dilakukan, lari terbukti ampuh menjaga kebugaran jantung. Namun, bagi pemula, disarankan untuk tidak langsung berlari jarak jauh. Mulailah dengan jalan cepat atau lari santai untuk mencegah cedera otot atau sendi.",
+                    q: "Makna tersirat dari paragraf tersebut bagi seorang pemula adalah...",
+                    options: [
+                        "A. Olahraga lari adalah olahraga yang paling murah.",
+                        "B. Pemula dilarang keras melakukan olahraga lari.",
+                        "C. Persiapan dan adaptasi fisik penting sebelum lari intensif.",
+                        "D. Berlari jarak jauh tidak bagus untuk kesehatan jantung.",
+                        "E. Masyarakat perkotaan rentan terkena cedera sendi."
+                    ],
+                    answer: 2,
+                    explanation: "Makna tersirat adalah pesan tersembunyi yang dapat disimpulkan. Karena disarankan tidak langsung lari jauh dan mulai dari jalan cepat untuk mencegah cedera, artinya pemula butuh persiapan dan adaptasi fisik secara bertahap."
+                }
+            ],
+
+            bahasa_inggris: [
+                {
+                    passage: "The Great Barrier Reef, located off the coast of Queensland, Australia, is the world's largest coral reef system. It is composed of over 2,900 individual reefs and 900 islands stretching for over 2,300 kilometers. This natural wonder is home to a breathtaking diversity of marine life, including countless species of colorful fish, mollusks, starfish, turtles, dolphins, and sharks. However, the reef faces severe threats from climate change. Rising ocean temperatures cause coral bleaching, a process where corals expel the symbiotic algae living in their tissues, turning them completely white and eventually leading to their death if conditions do not improve.",
+                    q: "What is the primary cause of coral bleaching according to the text?",
+                    options: [
+                        "A. Overfishing by local communities.",
+                        "B. Pollution from nearby islands.",
+                        "C. Rising ocean temperatures due to climate change.",
+                        "D. An increase in the shark population.",
+                        "E. Tourists damaging the coral reefs."
+                    ],
+                    answer: 2,
+                    explanation: "The text explicitly states: 'Rising ocean temperatures cause coral bleaching...' and links it to climate change."
+                },
+                {
+                    passage: "The Great Barrier Reef, located off the coast of Queensland, Australia, is the world's largest coral reef system. It is composed of over 2,900 individual reefs and 900 islands stretching for over 2,300 kilometers. This natural wonder is home to a breathtaking diversity of marine life, including countless species of colorful fish, mollusks, starfish, turtles, dolphins, and sharks. However, the reef faces severe threats from climate change. Rising ocean temperatures cause coral bleaching, a process where corals expel the symbiotic algae living in their tissues, turning them completely white and eventually leading to their death if conditions do not improve.",
+                    q: "The word 'expel' in the passage is closest in meaning to...",
+                    options: [
+                        "A. Absorb",
+                        "B. Consume",
+                        "C. Force out",
+                        "D. Protect",
+                        "E. Nurture"
+                    ],
+                    answer: 2,
+                    explanation: "In the context of the sentence 'corals expel the symbiotic algae', 'expel' means to force something out or eject it."
+                },
+                {
+                    q: "Choose the correct sentence structure:",
+                    options: [
+                        "A. If I will have enough money, I will buy a new car.",
+                        "B. If I had enough money, I will buy a new car.",
+                        "C. If I have enough money, I would buy a new car.",
+                        "D. If I have enough money, I will buy a new car.",
+                        "E. If I having enough money, I buy a new car."
+                    ],
+                    answer: 3,
+                    explanation: "This is a Conditional Type 1 sentence (real possibility in the future). Structure: If + Simple Present (have), Subject + will + V1 (will buy)."
+                },
+                {
+                    q: "He is the man ________ wallet was stolen yesterday.",
+                    options: [
+                        "A. who",
+                        "B. whom",
+                        "C. whose",
+                        "D. which",
+                        "E. that"
+                    ],
+                    answer: 2,
+                    explanation: "'Whose' is used as a relative pronoun to indicate possession. It means 'the wallet belonging to the man'."
+                },
+                {
+                    q: "The manager, as well as the employees, ________ attending the conference right now.",
+                    options: [
+                        "A. is",
+                        "B. are",
+                        "C. was",
+                        "D. were",
+                        "E. be"
+                    ],
+                    answer: 0,
+                    explanation: "When subjects are joined by 'as well as', 'along with', or 'together with', the verb agrees with the first subject. The first subject 'The manager' is singular, and the time marker is 'right now', so the present singular 'is' is used."
+                },
+                {
+                    passage: "Sleep is crucial for both physical and mental health. During sleep, the body repairs tissues, synthesizes hormones, and consolidates memories. Chronic sleep deprivation has been linked to a weakened immune system, weight gain, and an increased risk of chronic conditions like heart disease and diabetes. Furthermore, a lack of adequate rest severely impairs cognitive function, making it difficult to concentrate, solve problems, and regulate emotions. Experts recommend that adults aim for 7 to 9 hours of quality sleep each night to function optimally.",
+                    q: "What is the main idea of the passage?",
+                    options: [
+                        "A. How to cure chronic sleep deprivation.",
+                        "B. The process of memory consolidation during sleep.",
+                        "C. The negative impacts of weight gain on sleep.",
+                        "D. The importance of sleep for overall health and well-being.",
+                        "E. Why adults need exactly 9 hours of sleep."
+                    ],
+                    answer: 3,
+                    explanation: "The passage discusses both physical repairs and mental benefits of sleep, as well as the negative consequences of sleep deprivation, all pointing to the central theme of sleep's critical importance to overall health."
+                },
+                {
+                    passage: "Sleep is crucial for both physical and mental health. During sleep, the body repairs tissues, synthesizes hormones, and consolidates memories. Chronic sleep deprivation has been linked to a weakened immune system, weight gain, and an increased risk of chronic conditions like heart disease and diabetes. Furthermore, a lack of adequate rest severely impairs cognitive function, making it difficult to concentrate, solve problems, and regulate emotions. Experts recommend that adults aim for 7 to 9 hours of quality sleep each night to function optimally.",
+                    q: "Based on the text, which of the following is NOT an effect of sleep deprivation?",
+                    options: [
+                        "A. Difficulty in managing emotions.",
+                        "B. Enhanced ability to synthesize hormones.",
+                        "C. Increased risk of diabetes.",
+                        "D. Weakened immune system.",
+                        "E. Poor concentration."
+                    ],
+                    answer: 1,
+                    explanation: "The text states that hormone synthesis happens *during* sleep. Sleep deprivation would hinder this, not enhance it. The other options are explicitly mentioned as negative effects of lacking sleep."
+                },
+                {
+                    q: "By the time we arrive at the cinema, the movie ________.",
+                    options: [
+                        "A. will start",
+                        "B. is starting",
+                        "C. has started",
+                        "D. will have started",
+                        "E. started"
+                    ],
+                    answer: 3,
+                    explanation: "The phrase 'By the time + simple present' requires the Future Perfect tense ('will have + V3') in the main clause to show an action that will be completed before a certain point in the future."
+                },
+                {
+                    q: "I regret ________ him my secret. He told everyone in the office.",
+                    options: [
+                        "A. to tell",
+                        "B. tell",
+                        "C. telling",
+                        "D. told",
+                        "E. having tell"
+                    ],
+                    answer: 2,
+                    explanation: "'Regret + V-ing' is used to express remorse about an action that happened in the past."
+                },
+                {
+                    q: "Synonym of the word 'OBSOLETE' is...",
+                    options: [
+                        "A. Modern",
+                        "B. Essential",
+                        "C. Outdated",
+                        "D. Complex",
+                        "E. Durable"
+                    ],
+                    answer: 2,
+                    explanation: "Obsolete means no longer produced or used; out of date. Therefore, 'Outdated' is the correct synonym."
+                },
+                {
+                    passage: "E-commerce has revolutionized the way people shop. Consumers can now purchase almost anything from the comfort of their homes with just a few clicks. This convenience has led to the exponential growth of online retail giants like Amazon and Alibaba. However, the rise of e-commerce has also presented challenges for traditional brick-and-mortar stores, many of which struggle to compete with the lower prices and vast selections offered online. Consequently, many physical retailers are adopting 'omnichannel' strategies, blending their online and offline presence to survive.",
+                    q: "What can be inferred about 'brick-and-mortar stores' from the passage?",
+                    options: [
+                        "A. They are growing faster than e-commerce giants.",
+                        "B. They only sell products that cannot be found online.",
+                        "C. They are physical, traditional retail shops.",
+                        "D. They are digital stores created by traditional retailers.",
+                        "E. They always offer lower prices than online stores."
+                    ],
+                    answer: 2,
+                    explanation: "The passage contrasts 'brick-and-mortar stores' with 'e-commerce' and 'online retail', and later refers to them as 'physical retailers'. Thus, it means traditional, physical shops."
+                },
+                {
+                    passage: "E-commerce has revolutionized the way people shop. Consumers can now purchase almost anything from the comfort of their homes with just a few clicks. This convenience has led to the exponential growth of online retail giants like Amazon and Alibaba. However, the rise of e-commerce has also presented challenges for traditional brick-and-mortar stores, many of which struggle to compete with the lower prices and vast selections offered online. Consequently, many physical retailers are adopting 'omnichannel' strategies, blending their online and offline presence to survive.",
+                    q: "The word 'exponential' in the text implies growth that is...",
+                    options: [
+                        "A. Slow and steady",
+                        "B. Unpredictable",
+                        "C. Rapid and massive",
+                        "D. Declining",
+                        "E. Temporary"
+                    ],
+                    answer: 2,
+                    explanation: "Exponential growth means growth whose rate becomes ever more rapid in proportion to the growing total number or size. Rapid and massive is the closest meaning."
+                },
+                {
+                    q: "She was very tired; ________, she continued to work until midnight.",
+                    options: [
+                        "A. therefore",
+                        "B. nevertheless",
+                        "C. moreover",
+                        "D. because",
+                        "E. otherwise"
+                    ],
+                    answer: 1,
+                    explanation: "The two clauses contrast with each other (tired vs. continued working). 'Nevertheless' is a conjunctive adverb indicating contrast or concession (meaning 'in spite of that')."
+                },
+                {
+                    q: "The book ________ by an anonymous author in the 18th century.",
+                    options: [
+                        "A. wrote",
+                        "B. has written",
+                        "C. was written",
+                        "D. is written",
+                        "E. is writing"
+                    ],
+                    answer: 2,
+                    explanation: "The sentence requires passive voice (the book received the action) and refers to a specific time in the past (18th century), so Simple Past Passive ('was/were + V3') is used."
+                },
+                {
+                    q: "Despite ________ hard for the exam, she didn't get a good grade.",
+                    options: [
+                        "A. to study",
+                        "B. study",
+                        "C. studied",
+                        "D. she studied",
+                        "E. studying"
+                    ],
+                    answer: 4,
+                    explanation: "The preposition 'Despite' must be followed by a noun, pronoun, or a gerund (V-ing). 'Despite studying' is the correct form."
+                },
+                {
+                    passage: "Nuclear energy is often touted as a clean alternative to fossil fuels because nuclear power plants do not emit greenhouse gases during operation. Proponents argue that it provides a reliable and continuous source of large-scale electricity. However, the use of nuclear energy is highly controversial due to the severe risks involved. Accidents, such as those at Chernobyl and Fukushima, have demonstrated the catastrophic environmental and health consequences of radioactive leaks. Additionally, the safe disposal of long-lived nuclear waste remains an unresolved global challenge.",
+                    q: "Which of the following best describes the author's tone in the passage?",
+                    options: [
+                        "A. Enthusiastically supportive",
+                        "B. Aggressively critical",
+                        "C. Objective and balanced",
+                        "D. Humorous and satirical",
+                        "E. Dismissive"
+                    ],
+                    answer: 2,
+                    explanation: "The author presents both the arguments for nuclear energy (clean, reliable) and the arguments against it (severe risks, radioactive leaks, waste disposal) without heavily leaning to one side. It is an objective overview."
+                },
+                {
+                    passage: "Nuclear energy is often touted as a clean alternative to fossil fuels because nuclear power plants do not emit greenhouse gases during operation. Proponents argue that it provides a reliable and continuous source of large-scale electricity. However, the use of nuclear energy is highly controversial due to the severe risks involved. Accidents, such as those at Chernobyl and Fukushima, have demonstrated the catastrophic environmental and health consequences of radioactive leaks. Additionally, the safe disposal of long-lived nuclear waste remains an unresolved global challenge.",
+                    q: "According to the passage, why is nuclear energy considered a 'clean' alternative?",
+                    options: [
+                        "A. It produces zero waste of any kind.",
+                        "B. The plants are easy to clean and maintain.",
+                        "C. It does not release greenhouse gases while operating.",
+                        "D. It completely eliminates the risk of radiation.",
+                        "E. It uses water as its primary fuel."
+                    ],
+                    answer: 2,
+                    explanation: "The text states: '...because nuclear power plants do not emit greenhouse gases during operation.'"
+                },
+                {
+                    q: "I would rather you ________ here smoking.",
+                    options: [
+                        "A. not sit",
+                        "B. didn't sit",
+                        "C. won't sit",
+                        "D. haven't sat",
+                        "E. don't sit"
+                    ],
+                    answer: 1,
+                    explanation: "'Would rather + Subject' is followed by the Past Subjunctive (simple past form) to express a preference about someone else's present or future behavior."
+                },
+                {
+                    q: "Not only ________ the guitar, but he also writes his own songs.",
+                    options: [
+                        "A. he plays",
+                        "B. plays he",
+                        "C. does he play",
+                        "D. he does play",
+                        "E. do he play"
+                    ],
+                    answer: 2,
+                    explanation: "When a sentence begins with a negative expression like 'Not only', subject-verb inversion is required in the first clause. 'Does he play' is the correct inverted structure for the simple present tense."
+                },
+                {
+                    q: "Antonym of the word 'AMBIGUOUS' is...",
+                    options: [
+                        "A. Vague",
+                        "B. Unclear",
+                        "C. Obscure",
+                        "D. Definite",
+                        "E. Confusing"
+                    ],
+                    answer: 3,
+                    explanation: "Ambiguous means open to more than one interpretation; having a double meaning or unclear. The antonym must be clear or definite."
+                },
+                {
+                    passage: "Coffee is one of the most widely consumed beverages globally. Its active ingredient, caffeine, is a stimulant that can enhance alertness and reduce fatigue. Moderate coffee consumption has been associated with several health benefits, including a lower risk of Parkinson's disease, type 2 diabetes, and certain liver conditions. Nevertheless, excessive intake can lead to negative side effects such as insomnia, jitteriness, and increased heart rate. Pregnant women and individuals with specific health conditions are often advised to limit their caffeine consumption.",
+                    q: "The word 'moderate' in the text means...",
+                    options: [
+                        "A. Extreme",
+                        "B. Average or reasonable",
+                        "C. Inadequate",
+                        "D. Expensive",
+                        "E. Daily"
+                    ],
+                    answer: 1,
+                    explanation: "Moderate means kept or keeping within reasonable or proper limits; not extreme or excessive."
+                },
+                {
+                    q: "If she had known you were coming, she ________ a cake.",
+                    options: [
+                        "A. would bake",
+                        "B. will bake",
+                        "C. bakes",
+                        "D. would have baked",
+                        "E. had baked"
+                    ],
+                    answer: 3,
+                    explanation: "Conditional Type 3 (unreal past situation). Structure: If + Past Perfect (had known), Subject + would have + V3 (would have baked)."
+                },
+                {
+                    q: "The meeting was called ________ because the CEO was ill.",
+                    options: [
+                        "A. out",
+                        "B. up",
+                        "C. off",
+                        "D. in",
+                        "E. over"
+                    ],
+                    answer: 2,
+                    explanation: "The phrasal verb 'call off' means to cancel an event or agreement."
+                },
+                {
+                    q: "Hardly ________ the station when the train left.",
+                    options: [
+                        "A. I reached",
+                        "B. did I reach",
+                        "C. had I reached",
+                        "D. I had reached",
+                        "E. was I reaching"
+                    ],
+                    answer: 2,
+                    explanation: "When 'Hardly' starts a sentence, it requires inversion with the past perfect tense to show an action happening immediately before another in the past. Structure: Hardly + had + S + V3."
+                },
+                {
+                    q: "He is accustomed ________ up early in the morning.",
+                    options: [
+                        "A. to wake",
+                        "B. waking",
+                        "C. to waking",
+                        "D. for waking",
+                        "E. wake"
+                    ],
+                    answer: 2,
+                    explanation: "The phrase 'accustomed to' acts as a preposition, so it must be followed by a noun or a gerund (V-ing)."
+                }
+            ]
+        };
+
+        // State Variabel
+        let currentCategory = '';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredQuestions = 0;
+        let isQuestionAnswered = false;
+        
+        // Memuat state dari local storage (Cache)
+        let appState = {};
+        try {
+            appState = JSON.parse(localStorage.getItem('penmabaState')) || {};
+        } catch (e) {
+            appState = {};
+        }
+
+        // Element DOM
+        const menuScreen = document.getElementById('menu-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        
+        const scoreDisplay = document.getElementById('score-display');
+        const currentScoreEl = document.getElementById('current-score');
+        const totalAnsweredEl = document.getElementById('total-answered');
+        
+        const questionCounterEl = document.getElementById('question-counter');
+        const passageTextEl = document.getElementById('passage-text');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        
+        const explanationContainerEl = document.getElementById('explanation-container');
+        const explanationTextEl = document.getElementById('explanation-text');
+        
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+
+        // Update UI Menu untuk menampilkan status cache
+        function updateMenuUI() {
+            const categories = ['skolastik', 'matematika', 'bahasa_indonesia', 'bahasa_inggris'];
+            categories.forEach(cat => {
+                const subtitle = document.getElementById(`desc-${cat}`);
+                if (!subtitle) return;
+                
+                if (appState[cat] && appState[cat].finished) {
+                    const percentage = Math.round((appState[cat].score / questionsData[cat].length) * 100);
+                    subtitle.textContent = `Selesai (Skor: ${percentage}%) - Klik untuk Ulang`;
+                    subtitle.className = "text-sm text-green-600 font-semibold mt-1";
+                } else if (appState[cat] && appState[cat].answeredQuestions > 0) {
+                    subtitle.textContent = `Lanjut Soal ${appState[cat].currentIndex + 1} / ${questionsData[cat].length}`;
+                    subtitle.className = "text-sm text-orange-500 font-semibold mt-1";
+                } else {
+                    subtitle.textContent = "25 Soal";
+                    subtitle.className = "text-sm text-gray-500 mt-1";
+                }
+            });
+        }
+
+        // Inisialisasi UI pertama kali
+        updateMenuUI();
+
+        // Fungsi menyimpan state ke local storage
+        function saveState() {
+            localStorage.setItem('penmabaState', JSON.stringify(appState));
+        }
+
+        // Fungsi untuk memulai tes
+        function startTest(category) {
+            currentCategory = category;
+
+            // Inisialisasi state jika belum ada atau tes sebelumnya sudah selesai
+            if (!appState[category] || appState[category].finished) {
+                appState[category] = {
+                    currentIndex: 0,
+                    score: 0,
+                    answeredQuestions: 0,
+                    answers: {}, // Menyimpan jawaban dengan format { indexSoal: indexPilihan }
+                    finished: false
+                };
+            }
+
+            // Load data dari state cache
+            currentQuestionIndex = appState[category].currentIndex;
+            score = appState[category].score;
+            answeredQuestions = appState[category].answeredQuestions;
+            
+            saveState();
+            
+            // Sembunyikan menu, tampilkan quiz
+            menuScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            scoreDisplay.classList.remove('hidden');
+            
+            updateScoreDisplay();
+            loadQuestion();
+        }
+
+        // Fungsi untuk merender soal ke layar
+        function loadQuestion() {
+            isQuestionAnswered = false;
+            explanationContainerEl.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            finishBtn.classList.add('hidden');
+            
+            const currentQuestions = questionsData[currentCategory];
+            const qData = currentQuestions[currentQuestionIndex];
+            
+            questionCounterEl.textContent = `Soal ${currentQuestionIndex + 1} / ${currentQuestions.length}`;
+            
+            // Tampilkan passage/bacaan jika ada
+            if (qData.passage) {
+                passageTextEl.textContent = qData.passage;
+                passageTextEl.classList.remove('hidden');
+            } else {
+                passageTextEl.classList.add('hidden');
+            }
+            
+            questionTextEl.textContent = qData.q;
+            
+            // Generate Opsi Jawaban
+            optionsContainerEl.innerHTML = '';
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 border rounded-lg hover:bg-gray-50 transition-colors focus:outline-none';
+                btn.innerHTML = `<span class="font-medium mr-2">${String.fromCharCode(65 + index)}.</span> ${opt.substring(3)}`;
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainerEl.appendChild(btn);
+            });
+            
+            // Scroll ke atas dengan halus
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Jika soal ini sudah pernah dijawab (terekam di cache), pulihkan tampilannya
+            if (appState[currentCategory].answers[currentQuestionIndex] !== undefined) {
+                restoreAnsweredState(appState[currentCategory].answers[currentQuestionIndex]);
+            }
+        }
+
+        // Fungsi untuk mengembalikan tampilan soal yang sudah dijawab jika di-reload
+        function restoreAnsweredState(selectedIndex) {
+            isQuestionAnswered = true;
+            const currentQuestions = questionsData[currentCategory];
+            const qData = currentQuestions[currentQuestionIndex];
+            const correctIndex = qData.answer;
+            const optionButtons = optionsContainerEl.children;
+
+            for (let i = 0; i < optionButtons.length; i++) {
+                optionButtons[i].classList.add('disabled-option');
+                if (i === correctIndex) {
+                    optionButtons[i].classList.add('correct-answer');
+                    if (!optionButtons[i].innerHTML.includes('✓ Benar')) {
+                        optionButtons[i].innerHTML += ' <span class="float-right text-green-700">✓ Benar</span>';
+                    }
+                }
+            }
+
+            if (selectedIndex !== correctIndex) {
+                const selectedBtn = optionButtons[selectedIndex];
+                selectedBtn.classList.add('wrong-answer');
+                if (!selectedBtn.innerHTML.includes('✗ Salah')) {
+                    selectedBtn.innerHTML += ' <span class="float-right text-red-700">✗ Salah</span>';
+                }
+            }
+
+            explanationTextEl.textContent = qData.explanation;
+            explanationContainerEl.classList.remove('hidden');
+
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                finishBtn.classList.remove('hidden');
+            }
+        }
+
+        // Fungsi saat opsi dipilih
+        function selectOption(selectedIndex, selectedBtn) {
+            if (isQuestionAnswered) return; // Cegah klik ganda
+            
+            isQuestionAnswered = true;
+            answeredQuestions++;
+            appState[currentCategory].answeredQuestions = answeredQuestions;
+            
+            const currentQuestions = questionsData[currentCategory];
+            const qData = currentQuestions[currentQuestionIndex];
+            const correctIndex = qData.answer;
+            
+            const optionButtons = optionsContainerEl.children;
+            
+            // Disable semua tombol
+            for (let i = 0; i < optionButtons.length; i++) {
+                optionButtons[i].classList.add('disabled-option');
+                
+                // Warnai jawaban yang benar
+                if (i === correctIndex) {
+                    optionButtons[i].classList.add('correct-answer');
+                    // Ganti teks jadi tebal
+                    optionButtons[i].innerHTML = optionButtons[i].innerHTML + ' <span class="float-right text-green-700">✓ Benar</span>';
+                }
+            }
+            
+            // Cek apakah jawaban user benar atau salah
+            if (selectedIndex === correctIndex) {
+                score++;
+                appState[currentCategory].score = score;
+            } else {
+                selectedBtn.classList.add('wrong-answer');
+                selectedBtn.innerHTML = selectedBtn.innerHTML + ' <span class="float-right text-red-700">✗ Salah</span>';
+            }
+
+            // Simpan jawaban ke cache
+            appState[currentCategory].answers[currentQuestionIndex] = selectedIndex;
+            saveState();
+            
+            // Tampilkan pembahasan
+            explanationTextEl.textContent = qData.explanation;
+            explanationContainerEl.classList.remove('hidden');
+            
+            // Tampilkan tombol navigasi yang sesuai
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                finishBtn.classList.remove('hidden');
+            }
+            
+            updateScoreDisplay();
+        }
+
+        // Fungsi pindah ke soal selanjutnya
+        function nextQuestion() {
+            currentQuestionIndex++;
+            appState[currentCategory].currentIndex = currentQuestionIndex;
+            saveState();
+            loadQuestion();
+        }
+
+        // Fungsi menyelesaikan tes dan menampilkan skor
+        function finishTest() {
+            appState[currentCategory].finished = true;
+            saveState();
+
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            scoreDisplay.classList.add('hidden');
+            
+            const totalQuestions = questionsData[currentCategory].length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            
+            let categoryName = '';
+            switch(currentCategory) {
+                case 'skolastik': categoryName = 'Tes Penalaran Skolastik'; break;
+                case 'matematika': categoryName = 'Penalaran Matematika'; break;
+                case 'bahasa_indonesia': categoryName = 'Literasi Bahasa Indonesia'; break;
+                case 'bahasa_inggris': categoryName = 'Literasi Bahasa Inggris'; break;
+            }
+            
+            document.getElementById('result-category').textContent = `Kategori: ${categoryName}`;
+            document.getElementById('final-score').textContent = `${percentage}%`;
+            document.getElementById('correct-count').textContent = score;
+            document.getElementById('wrong-count').textContent = totalQuestions - score;
+            
+            // Animasi Lingkaran Skor
+            const circle = document.getElementById('score-circle');
+            const circumference = 100; // dari dasharray
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // Ganti warna berdasarkan skor
+            if(percentage >= 80) circle.classList.replace('text-green-500', 'text-green-500');
+            else if(percentage >= 60) circle.classList.replace('text-green-500', 'text-yellow-400');
+            else circle.classList.replace('text-green-500', 'text-red-500');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Fungsi kembali ke menu utama
+        function backToMenu() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            scoreDisplay.classList.add('hidden');
+            menuScreen.classList.remove('hidden');
+            
+            updateMenuUI();
+
+            // Reset lingkaran skor
+            const circle = document.getElementById('score-circle');
+            circle.style.strokeDashoffset = 0;
+            circle.className = "text-green-500 stroke-current";
+        }
+
+        // Update teks skor di header
+        function updateScoreDisplay() {
+            currentScoreEl.textContent = score;
+            totalAnsweredEl.textContent = answeredQuestions;
+        }
+    </script>
+</body>
+</html>
