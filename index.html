@@ -61,22 +61,41 @@
             width: 130px;
             height: 130px;
             border-radius: 28px;
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            display: grid;
-            place-items: center;
-            color: white;
-            font-size: 3rem;
-            font-weight: 700;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .avatar::after {
             content: "";
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at top left, rgba(255,255,255,0.35), transparent 45%);
+            background: radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 45%);
             pointer-events: none;
+        }
+
+        .icon {
+            width: 1rem;
+            height: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .profile-info {
@@ -221,7 +240,9 @@
     <div class="container">
         <header>
             <div class="profile-card">
-                <div class="avatar" aria-label="Profile image placeholder">MI</div>
+                <div class="avatar">
+                    <img src="assets/profile.jpeg" alt="Profile photo of M. Izzatul Islam">
+                </div>
                 <div class="profile-info">
                     <h1>M. Izzatul Islam</h1>
                     <p>Graphic designer with a strong focus on UI/UX and logo design. Experienced in visual communication design and ready to bring fresh, polished digital branding to life.</p>
@@ -235,8 +256,8 @@
         </header>
 
         <section class="main-grid">
-            <article class="panel">
-                <h2>About Me</h2>
+            <article class="panel" id="about">
+                <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7v2.1a5 5 0 0 1 0 9.8V21a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-.1a5 5 0 0 1 0-9.8V9a7 7 0 0 1 7-7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 14.5a3 3 0 0 0 6 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>About Me</h2>
                 <p>Hi, I'm M. Izzatul Islam. I graduated from Visual and Communication Design (DKV) 64 VHS Jakarta, and currently focus on graphic design, UI/UX design, and logo design. I use tools like Adobe Illustrator, Adobe Photoshop, Affinity, and Figma to craft clean, professional design systems.</p>
 
                 <div class="small-card">
@@ -262,12 +283,12 @@
             </article>
 
             <aside class="panel">
-                <h2>Quick Links</h2>
+                <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5A4.5 4.5 0 0 1 7.5 3h9A4.5 4.5 0 0 1 21 7.5v9a4.5 4.5 0 0 1-4.5 4.5h-9A4.5 4.5 0 0 1 3 16.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 9.75h18M9 21V9.75M15 21V9.75" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Quick Links</h2>
                 <ul class="links-list">
-                    <li><a href="#portfolio">Portfolio Page</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                    <li><a href="#education">Education</a></li>
+                    <li><a href="#portfolio"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 7v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio Page</a></li>
+                    <li><a href="#about"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 20v-1a6 6 0 0 1 12 0v1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>About</a></li>
+                    <li><a href="#contact"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="m3 6.5 9 6 9-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Contact</a></li>
+                    <li><a href="#education"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M2 8v6a10 10 0 0 0 10 5 10 10 0 0 0 10-5V8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Education</a></li>
                 </ul>
 
                 <div class="small-card">
@@ -276,9 +297,9 @@
                         <p>Graduated from Visual and Communication Design (DKV) 64 VHS Jakarta.</p>
                     </div>
                     <div id="contact">
-                        <h3>Contact</h3>
+                        <h3 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M22 6 12 13 2 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Contact</h3>
                         <ul class="contact-list">
-                            <li><a href="mailto:izzatulislam.amd@gmail.com">izzatulislam.amd@gmail.com</a></li>
+                            <li><a href="mailto:izzatulislam.amd@gmail.com"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="m3 6.5 9 6 9-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>izzatulislam.amd@gmail.com</a></li>
                         </ul>
                     </div>
                 </div>
@@ -286,7 +307,7 @@
         </section>
 
         <section class="panel" id="portfolio" style="margin-top:24px;">
-            <h2>Portfolio</h2>
+            <h2 class="section-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 7v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</h2>
             <p>If you want to see sample work, use the link above or reach out through email for business inquiries. I build strong visual identities, polished layouts, and memorable logos for digital and print.</p>
         </section>
 
